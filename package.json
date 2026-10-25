@@ -1,0 +1,41 @@
+{
+  "name": "pi-agent-recall",
+  "version": "0.1.0-experimental.0",
+  "private": true,
+  "description": "Deterministic model attention policy: silent, reanchor, and bounded wake decisions",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "exports": {
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "scripts": {
+    "test": "tsx --test \"tests/unit/*.test.ts\"",
+    "ittest": "tsx tests/run-integration.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "check": "pnpm test && pnpm typecheck && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@x-agent-suite/pty-driver": "file:本地制品目录/x-agent-suite-pty-driver-0.6.1.tgz",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "x-agent-suite": "file:本地制品目录/x-agent-suite-0.6.1.tgz"
+  }
+}

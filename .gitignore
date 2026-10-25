@@ -1,0 +1,22 @@
+# 操作系统与编辑器
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# 依赖、构建与测试
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# 本地凭据与过程证据
+.env
+.env.*
+*.key
+*.pem
+.tmp/
+*.log
+AGENTS.local.md
+.pi/
+.superpowers/
