@@ -76,13 +76,13 @@ E2E_PI_PTY=1 pnpm ittest
 
 ## Pi V2 测试 adapter 证据（2026-10-26）
 
-`src/pi` 已实现测试先行的同步 adapter，并经 `/pi` 加入 package exports（阶段一，2026-10-26）。当前 `pnpm check` 实测 **69/69**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**（载具 + 8 场景矩阵）。
+`src/pi` 已实现测试先行的同步 adapter，并经 `/pi` 加入 package exports（阶段一，2026-10-26）。会话面（2026-10-26 阶段二）落地 `recall` 信号工具与 `/recall` 只读命令。当前 `pnpm check` 实测 **77/77**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**（载具 + 9 场景矩阵）。
 
-`tests/integration/pi-recall.ittest.ts` 的场景组实际覆盖 8 个场景：reanchor 请求局部性、版本变化、prepare 前 activity 注入失效、单次 wake 与 customType 自激抑制、已有 continuation、off、缺锚点和 sink failed 不重试。每场景核对随机 marker、精确请求数、fake backend 原始请求及无正文 trace；`tests/support/pi-recall-extension.ts` 只由 `-ne -e` 显式加载。
+`tests/integration/pi-recall.ittest.ts` 的场景组实际覆盖 9 个场景：reanchor 请求局部性、版本变化、prepare 前 activity 注入失效、单次 wake 与 customType 自激抑制、已有 continuation、off、缺锚点、sink failed 不重试、recall 工具调用端到端。每场景核对随机 marker、精确请求数、fake backend 原始请求及无正文 trace；`tests/support/pi-recall-extension.ts` 只由 `-ne -e` 显式加载。
 
 真实宿主纠正了两项设计/测试假设：`canContinue` 是追加草稿前的上下文状态，最终 assistant 时 false 仍可随 custom message 请求 continuation；external continuation fixture 也必须附可运行消息，不能只返回 `continue:true`。reanchor 非持久场景让锚点只供第一次评估，避免把第二次合法注入误判为旧内容残留。
 
-过程日志位于 `.tmp/pi-v2-integration/`，逐场景请求/trace 位于 `.tmp/pi-recall-*.json`。fresh reviewer 发现的历史 wake 误判已补单元与第三次外部请求回归；shutdown/start 新 incarnation 亦有单元回归。reload/session 迟到回调仍没有独立真实 PTY 场景；真实双消费者、生产 AnchorProvider 与模型收益仍未验证。阶段一补充：`/pi` 出口经 tarball 离线消费与 d.ts 类型检查验证；adapter 增量单测覆盖去重、默认 off、事件对象去重与 reload fail-closed 防护。
+过程日志位于 `.tmp/pi-v2-integration/`，逐场景请求/trace 位于 `.tmp/pi-recall-*.json`。fresh reviewer 发现的历史 wake 误判已补单元与第三次外部请求回归；shutdown/start 新 incarnation 亦有单元回归。reload/session 迟到回调仍没有独立真实 PTY 场景；真实双消费者、生产 AnchorProvider 与模型收益仍未验证。阶段一补充：`/pi` 出口经 tarball 离线消费与 d.ts 类型检查验证；adapter 增量单测覆盖去重、默认 off、事件对象去重与 reload fail-closed 防护。阶段二补充：真实宿主纠正两处——`--no-tools` 会连扩展工具一并禁用（工具场景改 `--no-builtin-tools`）；sink/接缝内嵌套推进时钟会使 commit 倒退（commit 调用点钳制到实例最新时刻），并修复测试接缝 Date.now() 注入的 1ms 窗口竟态。recall 工具端到端场景证实：假端点脚本化 toolCall → adapter 执行 acknowledge → 回执随第二轮请求回端点，trace 带 fence 与锚点版本归因。
 
 ## 独立审查与修复
 
