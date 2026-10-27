@@ -29,6 +29,10 @@ interface Scenario {
   sinkFailure?: boolean;
   wakeBudget?: number;
   externalContinuation?: boolean;
+  /** 显式脚本轮（工具调用/文本）；缺省按 responses 生成纯文本轮。 */
+  script?: ReadonlyArray<{ toolCall?: { name: string; args: unknown }; text?: string }>;
+  /** 保留扩展工具（--no-builtin-tools），供会话面工具场景。 */
+  extensionTools?: boolean;
   verify(requests: string[], traces: Array<Record<string, unknown>>, marker: string): void;
 }
 
@@ -87,16 +91,27 @@ const scenarios: Scenario[] = [
       assert.ok(!requests[0]!.includes(marker));
       assert.equal(traces.some(row => row.reason === "sink-failed"), true);
     } },
+  { name: "tool-acknowledge", prompts: ["ack"], responses: 2,
+    allowReanchor: true, allowWake: false, extensionTools: true,
+    script: [{ toolCall: { name: "recall", args: { action: "acknowledge" } } }, { text: "done" }],
+    verify(requests, traces) {
+      assert.equal(requests.length, 2);
+      assert.ok(requests[1]!.includes("acknowledged fixture/tool-acknowledge@v1"),
+        "工具结果须随下一轮请求回到假端点");
+      assert.ok(traces.some(row => row.event === "acknowledge"), "acknowledge 必须落 trace");
+    } },
 ];
 
 async function runScenario(scenario: Scenario, entry: string, sandboxExecutable: string): Promise<void> {
   const { createPtyAgentDriver } = await import("@x-agent-suite/pty-driver");
   const marker = `RECALL_${scenario.name}_${randomUUID().replaceAll("-", "")}`;
   const backend = new FakeProviderBackend({ wire: "openai-chat",
-    script: Array.from({ length: scenario.responses }, (_, index) => ({ text: `response-${index}` })) });
+    script: scenario.script ?? Array.from({ length: scenario.responses },
+      (_, index) => ({ text: `response-${index}` })) });
   let sandbox: SandboxContext | undefined;
   const driver = createPtyAgentDriver({
-    profile: createPiFixtureProfile(entry, resolve("tests/support/pi-recall-extension.ts")),
+    profile: createPiFixtureProfile(entry, resolve("tests/support/pi-recall-extension.ts"),
+      scenario.extensionTools === true),
     backend, injectServer: false, commandOverride: { command: sandboxExecutable, argsPrefix: [] },
     readyTimeoutMs: 30_000, promptTimeoutMs: 30_000,
     sandboxSetup: async created => {
