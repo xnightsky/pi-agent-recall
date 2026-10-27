@@ -1,7 +1,7 @@
 ---
 type: spec
 date: 2026-10-26
-status: 已实施（2026-10-26 用户书面批准并解除旧规格工具暂停条款）
+status: 已实施（含 §9 增补；2026-10-26 用户书面批准并解除旧规格工具暂停条款）
 ---
 # 会话面设计：召回写工具、查看命令与触发链路
 
@@ -11,7 +11,7 @@ status: 已实施（2026-10-26 用户书面批准并解除旧规格工具暂停�
 
 | 维度 | 形态 | 使用者 | 面 |
 |---|---|---|---|
-| 写操作 | 1 个工具 `recall` | 模型 | 召回信号（acknowledge/refresh）常驻；有界 `configure` 由 §9 的 skill 引导增补（待评审） |
+| 写操作 | 1 个工具 `recall` | 模型 | 召回信号（acknowledge/refresh）常驻；有界 `configure` 经 §9 skill 引导（已实施） |
 | 查看 | 1 个 slash 命令 `/recall` | 人 | 机械只读：当前策略与状态视图，不可修改 |
 | 触发 | adapter 提示词注入链路（已实现） | 自动 | 本规格 §5 用 TUI 线框图固化其外部可观测行为 |
 
@@ -42,7 +42,7 @@ wrapper extension 代码（初始 AttentionConfig，人编辑）
 |---|---|---|
 | `"acknowledge"` | 无 | 确认收到当前锚点版本，落带 fence 归因的无正文 trace；**弱证据**：只能由消费者折算进后续候选的 `evidenceCount`；core 的 `adoption:"unobserved"` 不变量不动，core 不感知该信号来源 |
 | `"refresh"` | 无 | 声明锚点过时，adapter 通知 AnchorProvider 升版本；升版后按正常门槛评估，dedupe/cooldown 不被绕过，不保证必然重锚定 |
-| `"configure"`（§9 增补，待评审） | 白名单：`mode: "shadow"\|"off"`、allowReanchor/allowWake、cooldownMs/dedupeMs/maxAttemptsPerEpoch | 经 `applyConfig`；未知键/非法值整体拒绝；**schema 结构性无 emit** |
+| `"configure"`（§9） | 白名单：`mode: "shadow"\|"off"`、allowReanchor/allowWake、cooldownMs/dedupeMs/maxAttemptsPerEpoch | 经 `applyConfig`；未知键/非法值整体拒绝；**schema 结构性无 emit** |
 
 - 未知 action 在 schema 层与 execute 内双重拒绝，返回 `isError` 而不抛向宿主。
 - 证据作弊防护：调用记录带 fence 与版本归因，replay 可审计；「模型声称忘了」不允许折算为 evidence（沿用既有规则）。
@@ -111,7 +111,7 @@ agent_before_settle ── evaluate ──▶ wake permit
 
 broker/daemon/网络监听/文件热监听；配置自动标定；**模型侧 emit 能力**；跨会话同步；自然语言策略条件；slash 命令的任何修改能力。**冻结期内追加**：持久化配置文件、CLI bin 入口、配置命名空间管理。
 
-## 9. 增补（2026-10-26）：Skill 引导的配置闭环（待书面评审，未实施）
+## 9. 增补（2026-10-26）：Skill 引导的配置闭环（已实施）
 
 **定位：第四维——配置知识面。** `recall` 工具的 action 是能力，SKILL.md 是使用手册；模型平时只见 acknowledge/refresh 的常驻指引，仅当 adapter 感知到配置相关状态时才被召回配置手册，形成「感知 → 召回手册 → 按手册调用 configure → 审计 trace」闭环。
 
