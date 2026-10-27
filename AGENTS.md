@@ -50,4 +50,4 @@
 - 单包，`src/core/`、`src/testing/` 与 `src/pi/`；导出入口 `/core`、`/testing`、`/pi`，不提前提供未实现入口。
 - 文件和目录用 kebab-case；类型 PascalCase，函数/变量 camelCase。
 - `tests/unit/*.test.ts` 与 `tests/support/`。未来真实宿主测试使用 `tests/integration/**/*.ittest.ts`；付费模型实验只能显式运行 `*.token.ittest.ts`。
-- 文档分层与 frontmatter 见 `docs/README.md`；本仓不含 skill，不复制下游技能；`/pi` extension 仅经 `pi-agent-recall/pi` 出口分发。
+- 文档分层与 frontmatter 见 `docs/README.md`；宿主 adapter 与随包 skill 由本仓维护（`src/pi`、`resources/skills`），不复制下游技能实例；`/pi` extension 仅经 `pi-agent-recall/pi` 出口分发。

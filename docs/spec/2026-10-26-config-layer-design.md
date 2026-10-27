@@ -11,7 +11,7 @@ status: 已实施（2026-10-26 用户书面批准并解除旧规格工具暂停�
 
 | 维度 | 形态 | 使用者 | 面 |
 |---|---|---|---|
-| 写操作 | 1 个工具 `recall` | 模型 | 仅召回段写动作（acknowledge/refresh）；**模型无任何配置写面** |
+| 写操作 | 1 个工具 `recall` | 模型 | 召回信号（acknowledge/refresh）常驻；有界 `configure` 由 §9 的 skill 引导增补（待评审） |
 | 查看 | 1 个 slash 命令 `/recall` | 人 | 机械只读：当前策略与状态视图，不可修改 |
 | 触发 | adapter 提示词注入链路（已实现） | 自动 | 本规格 §5 用 TUI 线框图固化其外部可观测行为 |
 
@@ -42,10 +42,11 @@ wrapper extension 代码（初始 AttentionConfig，人编辑）
 |---|---|---|
 | `"acknowledge"` | 无 | 确认收到当前锚点版本，落带 fence 归因的无正文 trace；**弱证据**：只能由消费者折算进后续候选的 `evidenceCount`；core 的 `adoption:"unobserved"` 不变量不动，core 不感知该信号来源 |
 | `"refresh"` | 无 | 声明锚点过时，adapter 通知 AnchorProvider 升版本；升版后按正常门槛评估，dedupe/cooldown 不被绕过，不保证必然重锚定 |
+| `"configure"`（§9 增补，待评审） | 白名单：`mode: "shadow"\|"off"`、allowReanchor/allowWake、cooldownMs/dedupeMs/maxAttemptsPerEpoch | 经 `applyConfig`；未知键/非法值整体拒绝；**schema 结构性无 emit** |
 
 - 未知 action 在 schema 层与 execute 内双重拒绝，返回 `isError` 而不抛向宿主。
 - 证据作弊防护：调用记录带 fence 与版本归因，replay 可审计；「模型声称忘了」不允许折算为 evidence（沿用既有规则）。
-- 配置写面在模型侧**整体不存在**（比 schema 枚举缺 emit 更强：连降级参数面都没有），无需任何运行时防护。
+- ~~配置写面在模型侧整体不存在~~（§9 增补修订为：有界 `configure` 白名单，`emit` 在 schema 结构性缺席——模型永远无法自行打开真实投递，emit 仍人专属）。
 
 ## 4. `/recall`：人的机械只读查看命令
 
@@ -108,7 +109,40 @@ agent_before_settle ── evaluate ──▶ wake permit
 
 ## 8. 非目标
 
-broker/daemon/网络监听/文件热监听；配置自动标定；模型侧任何配置写面；跨会话同步；自然语言策略条件；slash 命令的任何修改能力。**冻结期内追加**：持久化配置文件、CLI bin 入口、配置命名空间管理。
+broker/daemon/网络监听/文件热监听；配置自动标定；**模型侧 emit 能力**；跨会话同步；自然语言策略条件；slash 命令的任何修改能力。**冻结期内追加**：持久化配置文件、CLI bin 入口、配置命名空间管理。
+
+## 9. 增补（2026-10-26）：Skill 引导的配置闭环（待书面评审，未实施）
+
+**定位：第四维——配置知识面。** `recall` 工具的 action 是能力，SKILL.md 是使用手册；模型平时只见 acknowledge/refresh 的常驻指引，仅当 adapter 感知到配置相关状态时才被召回配置手册，形成「感知 → 召回手册 → 按手册调用 configure → 审计 trace」闭环。
+
+### 9.1 随包 Skill
+
+- 位置 `resources/skills/recall-config/SKILL.md`，经 package.json `pi.skills` 声明与 `files` 随包分发；frontmatter `description` 写明何时加载（召回状态异常、重复抑制、锚点缺失）。
+- 正文是抑制原因解读表：`duplicate` → 调 `dedupeMs`；`cooldown` → 调 `cooldownMs`；`budget-exceeded` → 提醒人类查预算；`missing-anchor` → 提醒人类查 AnchorProvider；`off` → 不动并提示由人类决定。附 configure 参数面与禁项：无 emit（schema 保证）、不得编造 evidence、每次调用落审计 trace。
+
+### 9.2 感知与自动召回（adapter 侧，core 零改动）
+
+- 触发（确定性规则，读 adapter 自己的 trace 流）：同一抑制 reason 连续 ≥2 次，或最近一次投递为 missing-anchor。
+- 召回动作：在 `context` 事件追加 `display:false` 的 config-hint 消息——状态摘要（mode/profile/最近抑制计数/锚点版本）+「加载 skill recall-config 获取配置指引」。
+- 频控：同一 reason 每 epoch 至多 1 次，每 incarnation 全局至多 3 次；每次落 trace event `"config-hint"`。
+- 该注入**不走 core 预算**（不与 reanchor/wake 竞争投递通道），由 adapter 直接组装，与「core 不感知宿主」不变量一致。
+
+### 9.3 configure action（有界，emit 结构性缺席）
+
+参数白名单见 §3 表。schema 枚举无 `"emit"`，execute 内双重校验；未知键/非法值整体拒绝并 `isError`。每次调用落 trace event `"configure"`（applied/rejected + fence 归因）。acknowledge/refresh 语义不变。
+
+### 9.4 验证方案（批准后）
+
+1. 单测：configure 白名单路径与整体拒绝；config-hint 触发条件与频控上限；SKILL.md frontmatter 合法性（name/description）与内容不含正文锚点。
+2. PTY：脚本化假端点——制造重复抑制 → 断言 config-hint 注入进入请求 → fixture 模拟模型读手册后调用 configure → 断言 trace 归因与生效参数；skill 目录经显式路径发现。
+3. 仍不证明：模型是否真的会按手册行事（属 token 实验）。
+
+### 9.5 边界修订
+
+AGENTS.md「本仓无宿主 extension/skill，不复制下游技能」一行已随 `/pi` 公开过时；随本增补修订为：宿主 adapter 与随包 skill 由本仓维护（`src/pi`、`resources/skills`），不复制下游技能实例。
+
+---
+
 
 ## 附录 A：已冻结的 CLI 与落盘配置端
 
