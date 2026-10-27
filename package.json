@@ -17,6 +17,10 @@
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"
     },
+    "./pi": {
+      "types": "./dist/pi/index.d.ts",
+      "import": "./dist/pi/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

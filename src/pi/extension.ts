@@ -104,9 +104,12 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
       });
     }
     function reload(raw: unknown, event: string): void {
-      if (!core) { trace({ event, reason: "closed" }); return; }
-      core.transition({ kind: "reload", fence: core.getState().fence, provenance: "external", now: options.now() });
-      trace({ event: "reload", fence: core.getState().fence });
+      guard(event, () => {
+        if (!core) { trace({ event, reason: "closed" }); return; }
+        const result = core.transition({ kind: "reload", fence: core.getState().fence,
+          provenance: "external", now: options.now() });
+        trace({ event: "reload", ...(result.status === "applied" ? { fence: result.fence } : { reason: result.reason }) });
+      });
     }
   };
 }
