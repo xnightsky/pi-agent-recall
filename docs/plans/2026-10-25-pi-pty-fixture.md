@@ -13,11 +13,11 @@ status: 已完成（仅真实 TUI 载具）
 
 ## 依赖与范围
 
-- 同轮本地制品：`本地制品目录/`，commit `<脱敏>`。按其公开分发约定以成对 file tarball devDependency 消费，固定 lockfile；这是要求兄弟目录布局的本地验证环境，不是可移植 registry 安装承诺。
+- 同轮本地制品：x-agent-suite 0.6.1 成对 tarball（本地 file 制品，路径与构建指纹已脱敏）。以 file tarball 消费并固定版本；这是本地验证环境约定，不是可移植 registry 安装承诺。套件现为可选依赖，安装方式见[测试文档](../testing.md)。
 - 核心 tgz SHA256：`79b5bddf65733f4bfd28fe4ad11abf91f76db880abb3cd39b5192c09b12db7ec`。
 - PTY tgz SHA256：`c621bc1620b734ab8473a58191f6e905686d8aee912dd056f62fde53a73a5931`。
 - 测试开发环境 Node >=24；不改变纯 core 的 Node >=22 契约。PTY 车道显式 opt-in，暂限支持网络限制探针的 macOS。
-- `tests/support` 自持 Pi profile；只用公开 `x-agent-suite/contracts`、`x-agent-suite/llm-fixture`、`@x-agent-suite/pty-driver`。不深导入邻仓 fixture、不复制 driver。
+- `tests/support` 自持 Pi profile；只用套件的导出子路径 `x-agent-suite/contracts`、`x-agent-suite/llm-fixture`、`@x-agent-suite/pty-driver`。不深导入内部 fixture、不复制 driver。
 
 ## 可验证步骤
 

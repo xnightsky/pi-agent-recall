@@ -5,7 +5,7 @@ status: 待评审
 ---
 # Agent Attention Policy 设计
 
-> 来源快照：复制自 内部事件总线 同路径；未改动源仓。下文状态反映原设计时点；本仓执行授权和接口补充见 [阶段零](2026-10-25-phase-zero.md)与 [runtime 契约](2026-10-25-runtime-contract.md)。仅修正迁移后的文档导航，不将旧方案重新授权。
+> 来源快照：复制自内部事件总线仓同路径（该仓未公开）；未改动源仓。下文状态反映原设计时点；本仓执行授权和接口补充见 [阶段零](2026-10-25-phase-zero.md)与 [runtime 契约](2026-10-25-runtime-contract.md)。仅修正迁移后的文档导航，不将旧方案重新授权。
 
 ## 结论
 
@@ -15,7 +15,7 @@ status: 待评审
 
 动作收敛为 `silent / reanchor / wake`。首版明确排除 LLM judge、daemon、离线队列、在线自动调参和强制 continuation。
 
-研究依据见[模型记忆曲线、注意力衰减与角色／规则遗忘](../research/agent-im/2026-10-24-model-attention-interventions.md)。此前《Pi 可配置事件召回包设计》（原仓 `docs/spec/2026-10-24-旧内部方案-package-design.md`，暂停方案不随本次迁移）因问题被重新框定为注意力干预而暂停，不按其实施。
+研究依据见[模型记忆曲线、注意力衰减与角色／规则遗忘](../research/agent-im/2026-10-24-model-attention-interventions.md)。此前《Pi 可配置事件召回包设计》（原仓对应暂停方案文档，文件名含私有项目代号已脱敏；暂停方案不随本次迁移）因问题被重新框定为注意力干预而暂停，不按其实施。
 
 ## 1. 目标与边界
 

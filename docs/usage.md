@@ -13,7 +13,7 @@ type: guide
 
 - 已构建 core 的运行要求为 Node >=22。
 - 在本仓安装开发依赖、构建和运行默认测试，需要 Node >=24、pnpm 10.33.0。
-- 开发依赖还需要同级 x-agent-suite 的固定 0.6.1 tarball；先按[制品说明](plans/2026-10-25-pi-pty-fixture.md)核对身份与 SHA256，缺失时不要用不明版本替换。
+- PTY 集成测试另需 x-agent-suite 0.6.1 成对 tarball（**可选依赖**，不在 devDependencies）；手动安装与核验流程见 [testing.md](testing.md)，制品 SHA256 见[载具计划](plans/2026-10-25-pi-pty-fixture.md)；缺失时相关测试自动 skip，不要用不明版本替换。
 - 包目前 private、未发布，不能按“已在 registry 发布的 Pi 插件”安装。
 
 在仓库根目录运行；已安装依赖时可跳过 install：

@@ -28,7 +28,7 @@ status: 实施依据
 4. emit 决策只产生有界 reservation；`prepareDelivery` 使用当前元数据、当前事实、显式 now 复核 fence/version/expiry/能力/活动，不允许旧 v1 决策偷偷换 v2 内容。失败后需重新 evaluate。
 5. prepare 成功即计一次尝试预算、冷却和去重；宿主明确失败或 unknown 也不退还，避免重试放大。`commitDelivery` 只接受 submitted/failed/unknown；重复回执幂等，冲突回执显式报错，迟到旧回执无效。不会自动重试，也不承诺 exactly-once。
 6. 同 ref@version 的并发候选被预留阻挡。所有保留项有 deadline；无机会且有明确 deadline 可返回 defer，但 core 不保存补发队列，调用方须重新 evaluate。无 deadline 或不可恢复条件为 drop。
-7. 一个 core 只服务一个显式 owner 的 session。core 不持有 sink、不自动发现 owner、不跨进程仲裁。未来接入必须将存量 事件总线 Wake 与 内部知识库 staleness/nudge 纳入同一组合根控制。
+7. 一个 core 只服务一个显式 owner 的 session。core 不持有 sink、不自动发现 owner、不跨进程仲裁。未来接入必须将存量事件总线 Wake 与内部知识库 staleness/nudge 纳入同一组合根控制。
 
 ## 动作与 profile
 

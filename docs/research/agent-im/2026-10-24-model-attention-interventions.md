@@ -4,7 +4,7 @@ date: 2026-10-24
 ---
 # 模型记忆曲线、注意力衰减与角色／规则遗忘：非业务调度干预
 
-> 来源快照：复制自 内部事件总线 同路径，源仓保持只读。论文结论保留原始核验时点；新增评分研究必须重新核验原文与数据。下文 内部知识库 链接为可选同级外部来源，不表示本库依赖或已接入 内部知识库。
+> 来源快照：复制自内部事件总线仓同路径（该仓未公开），源仓保持只读。论文结论保留原始核验时点；新增评分研究必须重新核验原文与数据。下文涉及的内部知识库文档均为未公开外部来源，不表示本库依赖或已接入它。
 
 > 基于本调研并经用户确认的库设计见 [Agent Attention Policy 设计](../../spec/2026-10-24-agent-attention-policy-design.md)（待书面评审，不代表现状）。
 
@@ -97,9 +97,9 @@ date: 2026-10-24
 
 可通用借鉴的是“规则提醒先试、语义理解确有必要才买 judge”和短暂尾部注入；不可照搬默认 `every=10/window=20000`，也不应假设 Pi 有相同 cache/durability 语义。
 
-## 6. 内部知识库 已有机制映射：可借结构，不搬阈值和事实
+## 6. 内部知识库项目（未公开）已有机制映射：可借结构，不搬阈值和事实
 
-只读核对 [instruction-decay-reinjection](../../../../内部知识库/docs/research/instruction-decay-reinjection.md)、[calibration](../../../../内部知识库/docs/research/recall/calibration.md)、[forced-continuation-vs-reminding](../../../../内部知识库/docs/research/2026-07-15-forced-continuation-vs-reminding.md) 与 [injection-contract](../../../../内部知识库/docs/architecture/injection-contract.md)。这些相对链接依赖两仓当前同级布局；核心映射如下，**不表示 内部知识库 机制已接入或适用于 内部事件总线**。
+只读核对内部文档 `instruction-decay-reinjection`、`calibration`、`forced-continuation-vs-reminding` 与 `injection-contract`（均位于一个未公开的内部知识库仓，链接已脱敏）。核心映射如下，**不表示其机制已接入或适用于本仓**。
 
 | 内部知识库 已有结构 | 可复用的抽象 | 对 事件总线 的限制 |
 | --- | --- | --- |
