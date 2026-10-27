@@ -11,7 +11,7 @@ status: 待书面评审，未实施
 
 | 维度 | 形态 | 使用者 | 面 |
 |---|---|---|---|
-| 写操作 | 1 个工具 `recall_write` | 模型 | 仅召回段写动作（acknowledge/refresh）；**模型无任何配置写面** |
+| 写操作 | 1 个工具 `recall` | 模型 | 仅召回段写动作（acknowledge/refresh）；**模型无任何配置写面** |
 | 查看 | 1 个 slash 命令 `/recall` | 人 | 机械只读：当前策略与状态视图，不可修改 |
 | 触发 | adapter 提示词注入链路（已实现） | 自动 | 本规格 §5 用 TUI 线框图固化其外部可观测行为 |
 
@@ -34,7 +34,7 @@ wrapper extension 代码（初始 AttentionConfig，人编辑）
 
 「人授权 emit」通道：编辑 wrapper 配置代码；这是冻结期内唯一通道。
 
-## 3. `recall_write`：模型唯一的召回写工具
+## 3. `recall`：模型唯一的召回写工具
 
 经 `pi.registerTool(defineTool(...))` 注册，TypeBox 判别联合 schema 编译期收口：
 
@@ -91,7 +91,7 @@ agent_before_settle ── evaluate ──▶ wake permit
             不允许 wake 自己再续命；预算/冷却/去重照常记账）
 ```
 
-人在会话内感知触发只有两个途径：settle 后多出来的那一轮 spinner（wake），以及 `/recall` 里的账本变化。模型感知触发只有两个途径：被注入的锚块内容，以及它自己 `recall_write` 的返回。
+人在会话内感知触发只有两个途径：settle 后多出来的那一轮 spinner（wake），以及 `/recall` 里的账本变化。模型感知触发只有两个途径：被注入的锚块内容，以及它自己 `recall` 的返回。
 
 ## 6. 与既有契约的关系
 
@@ -102,8 +102,8 @@ agent_before_settle ── evaluate ──▶ wake permit
 
 ## 7. 验证方案（批准后）
 
-1. 单测：fake ExtensionAPI 断言恰好注册 1 个 tool + 1 个 command；驱动 `recall_write` 两个 action 全路径；未知 action 双重拒绝；`/recall` 渲染输出为纯函数快照（注入 fake state 断言文本）。
-2. PTY：扩展 `tests/integration/pi-recall.ittest.ts` 场景组——真实 Pi 中经假端点脚本化让模型调用 `recall_write`，核对 trace 与 fence 归因（零 token）。
+1. 单测：fake ExtensionAPI 断言恰好注册 1 个 tool + 1 个 command；驱动 `recall` 两个 action 全路径；未知 action 双重拒绝；`/recall` 渲染输出为纯函数快照（注入 fake state 断言文本）。
+2. PTY：扩展 `tests/integration/pi-recall.ittest.ts` 场景组——真实 Pi 中经假端点脚本化让模型调用 `recall`，核对 trace 与 fence 归因（零 token）。
 3. 仍不证明：模型采用率与净收益（属独立的 `*.token.ittest.ts` 实验）。
 
 ## 8. 非目标
