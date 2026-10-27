@@ -31,7 +31,7 @@ interface CapturedCommand { handler(args: string, ctx: unknown): Promise<void> }
 interface SurfaceHarness {
   tools: Map<string, CapturedTool>;
   commands: Map<string, CapturedCommand>;
-  notifications: Array<{ message: string; type?: string }>;
+  notifications: Array<{ message: string; type?: string | undefined }>;
   traces: PiRecallTrace[];
   cores: PolicyCore[];
   refreshCalls: number;
@@ -41,7 +41,7 @@ interface SurfaceHarness {
 }
 
 /** 组装 extension 与捕获注册的 fake api；时间恒为 0，全部同步。 */
-function harness(options?: { anchor: PiAnchorSnapshot | undefined; withRefreshSeam?: boolean }): SurfaceHarness {
+function harness(options?: { anchor?: PiAnchorSnapshot | undefined; withRefreshSeam?: boolean }): SurfaceHarness {
   const snapshot: PiAnchorSnapshot | undefined = options && "anchor" in options ? options.anchor : {
     ref: { provider: "rules", id: "main" }, version: "1", content: "锚点内容一",
   };
@@ -49,13 +49,13 @@ function harness(options?: { anchor: PiAnchorSnapshot | undefined; withRefreshSe
   const cores: PolicyCore[] = [];
   const tools = new Map<string, CapturedTool>();
   const commands = new Map<string, CapturedCommand>();
-  const notifications: Array<{ message: string; type?: string }> = [];
+  const notifications: Array<{ message: string; type?: string | undefined }> = [];
   const handlers = new Map<string, (event: unknown) => unknown>();
   const state: SurfaceHarness = {
     tools, commands, notifications, traces, cores, refreshCalls: 0,
     fire: (name, event) => handlers.get(name)!(event),
     runCommand: args => commands.get("recall")!.handler(args, {
-      ui: { notify: (message: string, type?: string) => notifications.push({ message, type }) },
+      ui: { notify: (message: string, type?: string | undefined) => notifications.push({ message, type }) },
     }),
     callTool: params => tools.get("recall")!.execute("call-1", params, undefined, undefined, undefined),
   };

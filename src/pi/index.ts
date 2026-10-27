@@ -7,6 +7,9 @@ export type * from "./host-types.js";
 /** 同步 recall 投递内核。 */
 export { createRecallRuntime } from "./recall-runtime.js";
 export type { RecallRuntime, RecallRuntimeOptions, ReanchorResult, WakeResult } from "./recall-runtime.js";
+/** 会话面：recall 信号工具与 /recall 只读命令。 */
+export { executeRecallSignal, registerRecallSurface, renderRecallView } from "./surface.js";
+export type { RecallSurfaceDeps } from "./surface.js";
 /** Pi 事件组合根与唯一 session emit owner。 */
 export { createPiRecallExtension } from "./extension.js";
 export type { PiExtensionApi, PiRecallExtensionOptions, PiRecallTrace } from "./extension.js";
