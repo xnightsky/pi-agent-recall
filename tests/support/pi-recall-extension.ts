@@ -17,6 +17,8 @@ interface FixtureScenario {
   sinkFailure?: boolean;
   wakeBudget?: number;
   externalContinuation?: boolean;
+  /** 去重窗口；缺省 0（不去重），config-hint 场景需要正窗口制造 duplicate。 */
+  dedupeMs?: number;
 }
 
 function loadScenario(): FixtureScenario {
@@ -52,7 +54,7 @@ export default function recallFixture(pi: unknown): void {
       policyVersion: "v2-fixture-1", reminderTextVersion: "1",
     }, override: {
       mode: scenario.mode ?? "emit", allowReanchor: scenario.allowReanchor, allowWake: scenario.allowWake,
-      cooldownMs: 0, wakeCooldownMs: 0, dedupeMs: 0, maxAttemptsPerEpoch: 4, maxWakePerEpoch: scenario.wakeBudget ?? 1,
+      cooldownMs: 0, wakeCooldownMs: 0, dedupeMs: scenario.dedupeMs ?? 0, maxAttemptsPerEpoch: 4, maxWakePerEpoch: scenario.wakeBudget ?? 1,
       reservationTtlMs: 5_000, wakeTtlMs: 5_000,
     } },
     anchors: { current: () => {
