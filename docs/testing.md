@@ -5,7 +5,7 @@ type: guide
 
 ## 当前 V0 证据（2026-10-25）
 
-阶段零收口时 `pnpm check` 为 **44/44**。追加 PTY 载具后实际复跑为 **50/50**（新增 6 项安全/发现/就绪单元测试），零失败/skip，typecheck 与 build 通过。包契约测试实际 build → pack → 在本仓 .tmp 中离线安装 → Node 消费 `/core` 与 `/testing` → TypeScript 消费 d.ts，且拒绝私有深层路径、包根和未实现的 `/pi`。阶段零机制验证通过，不代表生产可用。
+阶段零收口时 `pnpm check` 为 **44/44**。追加 PTY 载具后实际复跑为 **50/50**（新增 6 项安全/发现/就绪单元测试），零失败/skip，typecheck 与 build 通过。包契约测试实际 build → pack → 在本仓 .tmp 中离线安装 → Node 消费 `/core` 与 `/testing` → TypeScript 消费 d.ts，且拒绝私有深层路径与包根。阶段零机制验证通过，不代表生产可用。
 
 过程记录在 .tmp/progress.md；失败/通过日志包含 profile、公共类型消费、policy、delivery、lifecycle 边界、shadow、replay，以及包消费验证。新行为采用失败测试后实现；既有 profile 没有重复实现。
 
@@ -76,13 +76,13 @@ E2E_PI_PTY=1 pnpm ittest
 
 ## Pi V2 测试 adapter 证据（2026-10-26）
 
-`src/pi` 已实现测试先行的同步 adapter，但未加入 package exports。当前 `pnpm check` 实测 **65/65**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**。
+`src/pi` 已实现测试先行的同步 adapter，并经 `/pi` 加入 package exports（阶段一，2026-10-26）。当前 `pnpm check` 实测 **69/69**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**（载具 + 8 场景矩阵）。
 
 `tests/integration/pi-recall.ittest.ts` 的场景组实际覆盖 8 个场景：reanchor 请求局部性、版本变化、prepare 前 activity 注入失效、单次 wake 与 customType 自激抑制、已有 continuation、off、缺锚点和 sink failed 不重试。每场景核对随机 marker、精确请求数、fake backend 原始请求及无正文 trace；`tests/support/pi-recall-extension.ts` 只由 `-ne -e` 显式加载。
 
 真实宿主纠正了两项设计/测试假设：`canContinue` 是追加草稿前的上下文状态，最终 assistant 时 false 仍可随 custom message 请求 continuation；external continuation fixture 也必须附可运行消息，不能只返回 `continue:true`。reanchor 非持久场景让锚点只供第一次评估，避免把第二次合法注入误判为旧内容残留。
 
-过程日志位于 `.tmp/pi-v2-integration/`，逐场景请求/trace 位于 `.tmp/pi-recall-*.json`。fresh reviewer 发现的历史 wake 误判已补单元与第三次外部请求回归；shutdown/start 新 incarnation 亦有单元回归。reload/session 迟到回调仍没有独立真实 PTY 场景；真实双消费者、生产 AnchorProvider、公开 `/pi` 与模型收益仍未验证。
+过程日志位于 `.tmp/pi-v2-integration/`，逐场景请求/trace 位于 `.tmp/pi-recall-*.json`。fresh reviewer 发现的历史 wake 误判已补单元与第三次外部请求回归；shutdown/start 新 incarnation 亦有单元回归。reload/session 迟到回调仍没有独立真实 PTY 场景；真实双消费者、生产 AnchorProvider 与模型收益仍未验证。阶段一补充：`/pi` 出口经 tarball 离线消费与 d.ts 类型检查验证；adapter 增量单测覆盖去重、默认 off、事件对象去重与 reload fail-closed 防护。
 
 ## 独立审查与修复
 

@@ -1,6 +1,6 @@
 {
   "name": "pi-agent-recall",
-  "version": "0.1.0-experimental.0",
+  "version": "0.2.0-experimental.0",
   "private": true,
   "description": "Deterministic model attention policy: silent, reanchor, and bounded wake decisions",
   "type": "module",
