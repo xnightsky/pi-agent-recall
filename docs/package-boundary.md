@@ -10,7 +10,7 @@ type: guide
 - 无 judge、daemon、scheduler、registry、memory bank、共享 Todo、离线队列或 durable 补发。
 - 两类 contract fixture、真实双消费者接入、Pi canary 和 token A/B 是不同验证层，不能互相冒充。
 - npm `private:true`，版本 `0.4.0-experimental.0`；查询名称未占用不等于名称保留或发布授权。本轮只做本地 pack/离线安装。
-- 包内未声明开源许可证；研究引用不授予第三方代码/数据再分发权。不得因本地验证通过而 publish。
+- 包已声明 MIT 许可证（LICENSE 在包根）；研究文档仅链接引用第三方成果。publish 仍需当前会话明确授权，`private:true` 翻转是最后闸门。
 - tarball 包含 dist、resources（随包 skill）、README、docs，不包含源码测试、.tmp、凭据或宿主配置。进程证据与依赖缓存留在 .tmp。
 
-开发测试另使用 `x-agent-suite` 与 `@x-agent-suite/pty-driver` **0.6.1** 同轮本地 tarball（仅 devDependencies，Node >=24）。当前依赖路径要求同级 suite 制品目录；未建立 registry/跨机器自动分发承诺。不会把 PTY 原生依赖或宿主 profile 放入 core/runtime，也不从 package exports 暴露测试胶水。
+开发测试另使用 `x-agent-suite` 与 `@x-agent-suite/pty-driver` **0.6.1** 同轮本地 tarball（**可选依赖**，不在 devDependencies，Node >=24）；手动安装方式见 [testing.md](testing.md)。未建立 registry/跨机器自动分发承诺。不会把 PTY 原生依赖或宿主 profile 放入 core/runtime，也不从 package exports 暴露测试胶水。

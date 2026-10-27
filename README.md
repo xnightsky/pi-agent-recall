@@ -2,7 +2,9 @@
 
 面向 Pi agent 的注意力召回策略：**默认沉默，优先重锚定，必要时有界唤醒**。core 保持宿主无关，不拥有记忆库、业务 scheduler 或消息设施；一次投递不代表模型采用。
 
-> `0.2.0-experimental.0`，`private:true`，仅本地实验，未发布。公开 `/core`、`/testing`、`/pi` 三个入口；`/pi` adapter 已在真实 Pi 1.4.0 的零费用 PTY 中验证 reanchor/wake（8 场景）。仍无生产 AnchorProvider、双消费者迁移或模型效果验证；不是上架的 Pi 插件。
+> **English**: Deterministic attention-recall policy for the Pi agent — silent by default, reanchor first, bounded wake when justified. Host-agnostic `/core` (zero deps, zero I/O), deterministic `/testing` harness, and a `/pi` adapter with a model-facing `recall` signal tool, a read-only `/recall` command, and a bundled `recall-config` skill that lets the model tune bounded parameters (never `emit`). Verified against real Pi 1.4.0 via zero-token PTY scenarios. Experimental; no production AnchorProvider or model-efficacy claims yet. Docs are primarily in Simplified Chinese. License: MIT.
+
+> `0.4.0-experimental.0`，仅本地实验，未发布。公开 `/core`、`/testing`、`/pi` 三个入口；`/pi` adapter 已在真实 Pi 1.4.0 的零费用 PTY 中验证（10 场景）。仍无生产 AnchorProvider、双消费者迁移或模型效果验证；不是上架的 Pi 插件。
 
 **核心状态**：现有实现只有一套 Profile 参数化的固定动作逻辑，尚无命名策略或观察到提案的完整闭环。先读[架构总览](docs/architecture/README.md)和[策略与配置](docs/architecture/policy-and-configuration.md)了解支持范围与目标；具体[补全规格](docs/spec/2026-10-25-deterministic-policy-core-design.md)仍待书面评审、未实施；[Pi V2 设计](docs/spec/2026-10-26-pi-v2-integration-design.md)仅落实测试 adapter。
 

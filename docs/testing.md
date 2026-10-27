@@ -55,7 +55,7 @@ pnpm ittest
 E2E_PI_PTY=1 pnpm ittest
 ```
 
-前置要求：Node >=24，同级 x-agent-suite 的固定成对 tarball，macOS `sandbox-exec`，PATH 中的官方 Pi 1.4.0。缺失平台/命令/钉版本时给明确 skip 原因；开启后策略解析、网络探针、PTY、断言或清理错误必须失败，不转 skip、不回退 live。拒绝 `E2E_KEEP_SANDBOX=1`。
+前置要求：Node >=24，macOS `sandbox-exec`，PATH 中的官方 Pi 1.4.0。x-agent-suite 0.6.1 成对 tarball 是**可选依赖**（不在 devDependencies）：要跑 PTY 集成场景，先手动 `pnpm add -D file:<suite 制品目录>/x-agent-suite-0.6.1.tgz file:<suite 制品目录>/x-agent-suite-pty-driver-0.6.1.tgz`，提交前还原 package.json 与 lockfile；套件缺失时所有套件相关测试显式 skip，install/check 不受影响。缺失平台/命令/钓版本时给明确 skip 原因；开启后策略解析、网络探针、PTY、断言或清理错误必须失败，不转 skip、不回退 live。拒绝 `E2E_KEEP_SANDBOX=1`。
 
 ### 安全与观测证据
 
