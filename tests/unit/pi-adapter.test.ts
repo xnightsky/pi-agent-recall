@@ -137,3 +137,79 @@ test("sink 内嵌套推进时钟时 commit 被钳制到实例最新时刻", () =
   assert.equal(reanchor?.delivered, true, "commit 不得因时钟倒退失败");
   assert.equal(h.traces.some(row => row.reason === "error"), false);
 });
+
+/** 组装锚点可变的 harness，驱动 config-hint 感知链路。 */
+function hintHarness(anchor: () => PiAnchorSnapshot | undefined): Harness {
+  const traces: PiRecallTrace[] = [];
+  const handlers = new Map<string, (event: unknown) => unknown>();
+  const pi: PiExtensionApi = { on: (event, handler) => void handlers.set(event, handler) };
+  createPiRecallExtension({
+    scope: "unit", owner: "unit-owner",
+    config: { context, profiles: [{ id: "emit-all", context, settings: {
+      mode: "emit", allowReanchor: true, allowWake: false, minEvidence: 1,
+      cooldownMs: 0, dedupeMs: 60_000, maxAttemptsPerEpoch: 8, reservationTtlMs: 60_000,
+    } }] },
+    anchors: { current: anchor },
+    now: () => 0,
+    trace: entry => traces.push(entry),
+  })(pi);
+  return {
+    fire: (name, event) => handlers.get(name)!(event),
+    traces,
+    lastTrace: event => [...traces].reverse().find(entry => entry.event === event),
+  };
+}
+
+/** 一个完整用户轮：before_agent_start + context，返回 context 的注入结果。 */
+function turn(h: Harness): { messages: Array<{ customType?: string; display?: boolean }> } | undefined {
+  h.fire("before_agent_start", { messageType: "user" });
+  return h.fire("context", { messages: [{ role: "user", content: "m" }] }) as
+    { messages: Array<{ customType?: string; display?: boolean }> } | undefined;
+}
+
+const anchorV1: PiAnchorSnapshot = { ref: { provider: "rules", id: "main" }, version: "1", content: "x" };
+
+test("同一抑制 reason 连续两次后注入 config-hint 并落 trace", () => {
+  const h = hintHarness(() => structuredClone(anchorV1));
+  h.fire("session_start");
+  turn(h); // 首次投递成功
+  assert.equal(turn(h), undefined, "首次抑制不注入 hint");
+  const result = turn(h); // duplicate ×2
+  const hint = result?.messages.find(m => m.customType === "pi-agent-recall.config-hint.v1");
+  assert.ok(hint, "连续抑制两次必须注入 config-hint");
+  assert.equal(hint!.display, false, "hint 不进 TUI 渲染");
+  assert.ok(h.traces.some(row => row.event === "config-hint" && row.reason === "duplicate"), "hint 必须落 trace");
+});
+
+test("config-hint 频控：同 epoch 同 reason 至多一次", () => {
+  const h = hintHarness(() => structuredClone(anchorV1));
+  h.fire("session_start");
+  turn(h);
+  turn(h);
+  turn(h); // 触发首次 hint
+  turn(h);
+  turn(h);
+  assert.equal(h.traces.filter(row => row.event === "config-hint").length, 1, "同 epoch 同 reason 不重复");
+});
+
+test("missing-anchor 首次即触发 config-hint", () => {
+  const h = hintHarness(() => undefined);
+  h.fire("session_start");
+  const result = turn(h);
+  assert.ok(result?.messages.some(m => m.customType === "pi-agent-recall.config-hint.v1"));
+  assert.ok(h.traces.some(row => row.event === "config-hint" && row.reason === "missing-anchor"));
+});
+
+test("成功投递重置连续抑制计数", () => {
+  let version = 1;
+  const h = hintHarness(() => ({ ref: { provider: "rules", id: "main" }, version: String(version), content: "x" }));
+  h.fire("session_start");
+  turn(h);                    // delivered v1
+  assert.equal(turn(h), undefined); // duplicate ×1
+  version = 2;
+  turn(h);                    // delivered v2，计数重置
+  assert.equal(turn(h), undefined, "重置后的首次抑制仍不注入");
+  const result = turn(h);     // duplicate ×2 → hint
+  assert.ok(result?.messages.some(m => m.customType === "pi-agent-recall.config-hint.v1"));
+  assert.equal(h.traces.filter(row => row.event === "config-hint").length, 1);
+});
