@@ -130,7 +130,7 @@ test("refresh 经显式接缝通知 AnchorProvider 并留痕；无接缝显式�
 
 test("未知 action 双重拒绝：isError 返回，不抛错，不留痕", async () => {
   const h = started(harness());
-  const result = await h.callTool({ action: "configure", mode: "emit" });
+  const result = await h.callTool({ action: "erase" });
   assert.equal(result.isError, true);
   assert.ok(result.content[0]!.text.includes("unknown-action"));
   assert.equal(h.traces.filter(row => row.event !== "runtime").length, 0);
@@ -165,8 +165,8 @@ test("configure 白名单参数生效并落带 fence 的审计 trace", async () 
   const result = await h.callTool({ action: "configure", mode: "shadow", cooldownMs: 5 });
   assert.equal(result.isError, undefined);
   const state = h.cores[0]!.getState();
-  assert.equal(state.mode, "shadow", "mode 应被 configure 改为 shadow");
-  assert.equal(state.cooldownMs, 5);
+  assert.equal(state.profile.settings.mode, "shadow", "mode 应被 configure 改为 shadow");
+  assert.equal(state.profile.settings.cooldownMs, 5);
   const entry = h.traces.find(row => row.event === "configure");
   assert.ok(entry, "configure 必须落审计 trace");
   assert.equal(entry!.delivered, true);
@@ -179,7 +179,7 @@ test("configure 的 schema 与 execute 双重拒绝 emit", async () => {
   assert.equal(JSON.stringify(tool.parameters).includes('"emit"'), false, "schema 结构性无 emit");
   const result = await h.callTool({ action: "configure", mode: "emit" });
   assert.equal(result.isError, true, "execute 必须二次拒绝 emit");
-  assert.equal(h.cores[0]!.getState().mode, "emit", "拒绝后状态不变");
+  assert.equal(h.cores[0]!.getState().profile.settings.mode, "emit", "拒绝后状态不变");
 });
 
 test("configure 空配置、未知键与错误类型整体拒绝", async () => {
@@ -188,7 +188,7 @@ test("configure 空配置、未知键与错误类型整体拒绝", async () => {
   assert.equal((await h.callTool({ action: "configure", bogus: 1 })).isError, true, "未知键拒绝");
   assert.equal((await h.callTool({ action: "configure", cooldownMs: "x" })).isError, true, "类型不符拒绝");
   assert.equal((await h.callTool({ action: "configure", dedupeMs: Number.NaN })).isError, true, "非有限数拒绝");
-  assert.equal(h.cores[0]!.getState().mode, "emit", "全部拒绝后状态不变");
+  assert.equal(h.cores[0]!.getState().profile.settings.mode, "emit", "全部拒绝后状态不变");
 });
 
 test("会话未启动时 configure 显式 closed", async () => {

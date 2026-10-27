@@ -1,10 +1,11 @@
 /** Pi 事件组合根；唯一 session emit owner 在这里持有 core，不进入 core。 */
 import { randomUUID } from "node:crypto";
 import type { AnchorMetadata, AttentionConfig, PolicyCore, PolicyFence } from "../core/index.js";
-import { createPolicyCore } from "../core/index.js";
+import { createPolicyCore, resolveProfile } from "../core/index.js";
 import type {
   PiAnchorProvider, PiCommandDefinition, PiDeliverySink, PiMessage, PiSettleBoundary, PiToolDefinition,
 } from "./host-types.js";
+import { readAnchor } from "./anchor.js";
 import { registerRecallSurface } from "./surface.js";
 import { createRecallRuntime, type RecallRuntime } from "./recall-runtime.js";
 
@@ -48,6 +49,8 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
     let core: PolicyCore | undefined;
     let runtime: RecallRuntime | undefined;
     const seen = new WeakSet<object>();
+    // config-hint 感知状态；session_start 时重置。
+    const hint = { last: undefined as string | undefined, consecutive: 0, sent: new Map<string, number>(), total: 0 };
     const trace = (entry: PiRecallTrace) => options.trace(entry);
     const close = () => {
       runtime?.close();
@@ -66,6 +69,7 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
     };
 
     pi.on("session_start", () => guard("session_start", () => {
+      hint.last = undefined; hint.consecutive = 0; hint.sent.clear(); hint.total = 0;
       runtime?.close();
       const incarnation = options.createIncarnation?.() ?? randomUUID();
       core = options.createCore?.(incarnation, options.config) ?? createPolicyCore({ scope: options.scope, owner: options.owner,
@@ -84,7 +88,13 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
       const result = active.reanchor((raw as Context).messages, options.now());
       trace({ event: "reanchor", delivered: result.delivered,
         ...(result.reason ? { reason: result.reason } : {}) });
-      return result.delivered ? { messages: result.messages } : undefined;
+      if (result.delivered) {
+        hint.last = undefined;
+        hint.consecutive = 0;
+        return { messages: result.messages };
+      }
+      const hinted = configHint(result.reason, (raw as Context).messages, options.now());
+      return hinted ? { messages: hinted } : undefined;
     }));
     pi.on("agent_before_settle", raw => guard("agent_before_settle", () => {
       const active = current("agent_before_settle");
@@ -107,7 +117,35 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
       now: () => options.now(),
       trace,
       ...(options.requestAnchorRefresh ? { requestAnchorRefresh: options.requestAnchorRefresh } : {}),
+      // 将白名单 patch 重建为完整 AttentionConfig：resolveProfile 平铺当前生效值，覆盖后整体重校验。
+      applyConfigure: next => {
+        if (!core) throw new Error("closed");
+        const resolved = resolveProfile(options.config);
+        core.applyConfig({ context: options.config.context, profiles: [{ id: resolved.id, context: resolved.context,
+          settings: { ...resolved.settings, ...next } }] });
+      },
     });
+
+    /** 感知配置相关状态并注入 display:false 的召回手册指引；同 reason 每 epoch 至多一次，全局至多 3 次。 */
+    function configHint(reason: string | undefined, messages: PiMessage[], now: number): PiMessage[] | undefined {
+      if (!reason || !core) return undefined;
+      hint.consecutive = reason === hint.last ? hint.consecutive + 1 : 1;
+      hint.last = reason;
+      const trigger = reason === "missing-anchor" ? hint.consecutive >= 1 : hint.consecutive >= 2;
+      if (!trigger) return undefined;
+      const state = core.getState();
+      if (hint.sent.get(reason) === state.fence.epoch || hint.total >= 3) return undefined;
+      hint.sent.set(reason, state.fence.epoch);
+      hint.total += 1;
+      const anchor = readAnchor(options.anchors)?.metadata;
+      const summary = "recall config-hint: mode=" + state.profile.settings.mode + " profile=" + state.profile.id
+        + " suppression=" + reason + "x" + hint.consecutive
+        + " anchor=" + (anchor ? `${anchor.ref.provider}/${anchor.ref.id}@${anchor.version}` : "missing")
+        + "。加载 skill recall-config 获取配置指引（configure 白名单：shadow/off 与数值参数；emit 由人类决定）。";
+      trace({ event: "config-hint", reason, fence: state.fence });
+      return [...messages, { role: "custom", customType: "pi-agent-recall.config-hint.v1",
+        content: summary, display: false, timestamp: now }];
+    }
 
     function activity(raw: unknown, event: string): void {
       guard(event, () => {

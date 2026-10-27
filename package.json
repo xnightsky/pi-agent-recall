@@ -25,9 +25,13 @@
   },
   "files": [
     "dist",
+    "resources",
     "README.md",
     "docs"
   ],
+  "pi": {
+    "skills": ["./resources/skills"]
+  },
   "scripts": {
     "test": "tsx --test \"tests/unit/*.test.ts\"",
     "ittest": "tsx tests/run-integration.ts",
