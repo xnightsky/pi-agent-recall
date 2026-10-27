@@ -21,7 +21,7 @@ type: map
 - [最终命名与 runtime 契约补充](spec/2026-10-25-runtime-contract.md)：最终名 pi-agent-recall，冲突处优先。
 - [确定性策略核心补全设计](spec/2026-10-25-deterministic-policy-core-design.md)：已确认先补核心闭环；书面设计待评审，接口未实施，不能当作当前能力。
 - [Pi V2 宿主集成设计](spec/2026-10-26-pi-v2-integration-design.md)：adapter 已实施、有真实 PTY 证据并经 `/pi` 公开；生产 AnchorProvider 未做。
-- [配置层设计](spec/2026-10-26-config-layer-design.md)：工具双段（配置段/召回段）；CLI 与落盘配置端已冻结。待书面评审，未实施，批准即解除旧规格的工具暂停条款。
+- [配置层设计](spec/2026-10-26-config-layer-design.md)：工具面收敛为一读一写 2 个工具（配置段/召回段为载荷结构）；CLI 与落盘配置端已冻结。待书面评审，未实施，批准即解除旧规格的工具暂停条款。
 - [施工计划](plans/2026-10-25-phase-zero.md)：记录步骤与完成状态，不替代当前架构。
 - [真实 Pi PTY 载具计划与结果](plans/2026-10-25-pi-pty-fixture.md)：独立零费用真实 TUI 验证，不冒充完整 V2。
 - [Pi V2 实施计划](plans/2026-10-26-pi-v2-integration.md)：测试 adapter 的 TDD 施工与验证记录。
