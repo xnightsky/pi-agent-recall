@@ -29,8 +29,10 @@ interface Scenario {
   sinkFailure?: boolean;
   wakeBudget?: number;
   externalContinuation?: boolean;
-  /** 显式脚本轮（工具调用/文本）；缺省按 responses 生成纯文本轮。 */
-  script?: ReadonlyArray<{ toolCall?: { name: string; args: unknown }; text?: string }>;
+  /** 去重窗口（毫秒）；缺省 0（不去重）。 */
+  dedupeMs?: number;
+  /** 显式脚本轮；脚本轮索引 = 请求体内 tool result 轮数，whenText 内容命中优先。 */
+  script?: ReadonlyArray<{ toolCall?: { name: string; args: unknown }; text?: string; whenText?: string }>;
   /** 保留扩展工具（--no-builtin-tools），供会话面工具场景。 */
   extensionTools?: boolean;
   verify(requests: string[], traces: Array<Record<string, unknown>>, marker: string): void;
@@ -99,6 +101,19 @@ const scenarios: Scenario[] = [
       assert.ok(requests[1]!.includes("acknowledged fixture/tool-acknowledge@v1"),
         "工具结果须随下一轮请求回到假端点");
       assert.ok(traces.some(row => row.event === "acknowledge"), "acknowledge 必须落 trace");
+    } },
+  { name: "config-hint-configure", prompts: ["t1", "t2", "t3", "please-configure"], responses: 5,
+    allowReanchor: true, allowWake: false, extensionTools: true, dedupeMs: 60_000,
+    // 脚本索引 = tool result 轮数：纯文本轮全走 script[0]；configure 轮与续轮靠 whenText 内容路由，续轮规则须先于 cfg 规则。 
+    script: [{ text: "plain" },
+      { text: "done", whenText: "configure applied" },
+      { toolCall: { name: "recall", args: { action: "configure", cooldownMs: 1 } }, whenText: "please-configure" }],
+    verify(requests, traces) {
+      assert.equal(requests.length, 5);
+      assert.ok(requests[2]!.includes("recall config-hint"), "连续抑制后 config-hint 须随第三轮请求到端点");
+      assert.ok(traces.some(row => row.event === "config-hint" && row.reason === "duplicate"), "hint 必须落 trace");
+      const configure = traces.find(row => row.event === "configure");
+      assert.equal(configure?.delivered, true, "configure 必须落审计 trace");
     } },
 ];
 

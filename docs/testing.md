@@ -76,9 +76,9 @@ E2E_PI_PTY=1 pnpm ittest
 
 ## Pi V2 测试 adapter 证据（2026-10-26）
 
-`src/pi` 已实现测试先行的同步 adapter，并经 `/pi` 加入 package exports（阶段一，2026-10-26）。会话面（2026-10-26 阶段二）落地 `recall` 信号工具与 `/recall` 只读命令。当前 `pnpm check` 实测 **77/77**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**（载具 + 9 场景矩阵）。
+`src/pi` 已实现测试先行的同步 adapter，并经 `/pi` 加入 package exports（阶段一，2026-10-26）。会话面（阶段二）落地 `recall` 信号工具与 `/recall` 只读命令；阶段三落地有界 `configure` 与 config-hint 感知召回（随包 `recall-config` skill）。当前 `pnpm check` 实测 **85/85**，typecheck 与 build 通过；默认 `pnpm ittest` 为 **0 pass / 2 skip**，显式 `E2E_PI_PTY=1 pnpm ittest` 为 **2/2**（载具 + 10 场景矩阵）。
 
-`tests/integration/pi-recall.ittest.ts` 的场景组实际覆盖 9 个场景：reanchor 请求局部性、版本变化、prepare 前 activity 注入失效、单次 wake 与 customType 自激抑制、已有 continuation、off、缺锚点、sink failed 不重试、recall 工具调用端到端。每场景核对随机 marker、精确请求数、fake backend 原始请求及无正文 trace；`tests/support/pi-recall-extension.ts` 只由 `-ne -e` 显式加载。
+`tests/integration/pi-recall.ittest.ts` 的场景组实际覆盖 10 个场景：reanchor 请求局部性、版本变化、prepare 前 activity 注入失效、单次 wake 与 customType 自激抑制、已有 continuation、off、缺锚点、sink failed 不重试、recall 工具调用端到端、config-hint-configure 闭环。每场景核对随机 marker、精确请求数、fake backend 原始请求及无正文 trace；`tests/support/pi-recall-extension.ts` 只由 `-ne -e` 显式加载。阶段三新知：假端点脚本索引 = 请求体内 tool result 轮数（非请求数），`whenText` 内容路由优先于索引；fixture 新增 `dedupeMs` 旋钮以在真实 PTY 中制造 duplicate 抑制。
 
 真实宿主纠正了两项设计/测试假设：`canContinue` 是追加草稿前的上下文状态，最终 assistant 时 false 仍可随 custom message 请求 continuation；external continuation fixture 也必须附可运行消息，不能只返回 `continue:true`。reanchor 非持久场景让锚点只供第一次评估，避免把第二次合法注入误判为旧内容残留。
 
