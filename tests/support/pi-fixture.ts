@@ -72,7 +72,7 @@ async function writeConfig(sandbox: SandboxContext, context: WriteConfigContext)
 }
 
 /** 创建固定 CLI 入口、假端点与网络封锁的真实 PTY 测试 profile；仅允许显式测试扩展。 */
-export function createPiFixtureProfile(cliEntry: string, extension?: string): HarnessProfile {
+export function createPiFixtureProfile(cliEntry: string, extension?: string, keepExtensionTools = false): HarnessProfile {
   return {
     name: "recall-pi-fixture", command: "sandbox-exec", wire: "openai-chat",
     baseUrlEnv: "", stripEnv: Object.keys(process.env), supportsFixture: true,
@@ -84,7 +84,9 @@ export function createPiFixtureProfile(cliEntry: string, extension?: string): Ha
       "--provider", "recall-fixture", "--model", "fake", "--thinking", "off",
       "--offline", "--no-session", "--no-approve", "--no-extensions", "--no-mcp",
       ...(extension ? ["--extension", extension] : []),
-      "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--no-tools",
+      "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files",
+      // --no-tools 连扩展工具一并禁用；--no-builtin-tools 保留扩展工具供会话面场景。
+      keepExtensionTools ? "--no-builtin-tools" : "--no-tools",
     ],
     ptyReadyPattern: /v1\.4\.0[\s\S]*0\.0%\/128k[ \t]+fake/,
     ptyIdlePatterns: [/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏].*/g],

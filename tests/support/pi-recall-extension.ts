@@ -69,7 +69,8 @@ export default function recallFixture(pi: unknown): void {
         prepareDelivery: (id, input) => {
           if (scenario.activityBeforePrepare && !injected) {
             injected = true;
-            core.transition({ kind: "activity", fence: core.getState().fence, provenance: "external", now: Date.now() });
+            // 嵌套转换不得随意推进时钟：用实例已知时刻消除 1ms 窗口竟态，fence 失效语义不变。
+            core.transition({ kind: "activity", fence: core.getState().fence, provenance: "external", now: core.getState().now });
           }
           try { return core.prepareDelivery(id, input); }
           catch (error) {

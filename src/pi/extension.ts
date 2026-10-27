@@ -1,8 +1,11 @@
 /** Pi 事件组合根；唯一 session emit owner 在这里持有 core，不进入 core。 */
 import { randomUUID } from "node:crypto";
-import type { AttentionConfig, PolicyCore, PolicyFence } from "../core/index.js";
+import type { AnchorMetadata, AttentionConfig, PolicyCore, PolicyFence } from "../core/index.js";
 import { createPolicyCore } from "../core/index.js";
-import type { PiAnchorProvider, PiDeliverySink, PiMessage, PiSettleBoundary } from "./host-types.js";
+import type {
+  PiAnchorProvider, PiCommandDefinition, PiDeliverySink, PiMessage, PiSettleBoundary, PiToolDefinition,
+} from "./host-types.js";
+import { registerRecallSurface } from "./surface.js";
 import { createRecallRuntime, type RecallRuntime } from "./recall-runtime.js";
 
 /** 无正文适配器诊断；用于测试证据和 fail-closed 观察。 */
@@ -11,10 +14,15 @@ export interface PiRecallTrace {
   delivered?: boolean;
   reason?: string;
   fence?: PolicyFence;
+  anchor?: AnchorMetadata;
 }
 
-/** 本 adapter 使用的最小 ExtensionAPI 结构。 */
-export interface PiExtensionApi { on(event: string, handler: (event: unknown) => unknown): void }
+/** 本 adapter 使用的最小 ExtensionAPI 结构；注册面可选以增强结构性兼容。 */
+export interface PiExtensionApi {
+  on(event: string, handler: (event: unknown) => unknown): void;
+  registerTool?(tool: PiToolDefinition): void;
+  registerCommand?(name: string, command: PiCommandDefinition): void;
+}
 
 /** 测试先行 extension 的同步依赖；不读取全局配置或宿主凭据。 */
 export interface PiRecallExtensionOptions {
@@ -27,6 +35,8 @@ export interface PiRecallExtensionOptions {
   createIncarnation?(): string;
   createCore?(incarnation: string, config: AttentionConfig): PolicyCore;
   sink?: PiDeliverySink;
+  /** refresh 信号的 AnchorProvider 通知接缝；缺失时模型调用 refresh 显式 unsupported。 */
+  requestAnchorRefresh?(): void;
 }
 
 interface BeforeStart { messageType: "user" | "custom"; message?: { customType?: string } }
@@ -90,6 +100,14 @@ export function createPiRecallExtension(options: PiRecallExtensionOptions): (pi:
     pi.on("session_before_tree", raw => reload(raw, "session_before_tree"));
     pi.on("session_before_switch", () => close());
     pi.on("session_shutdown", () => close());
+
+    registerRecallSurface(pi, {
+      core: () => core,
+      anchors: options.anchors,
+      now: () => options.now(),
+      trace,
+      ...(options.requestAnchorRefresh ? { requestAnchorRefresh: options.requestAnchorRefresh } : {}),
+    });
 
     function activity(raw: unknown, event: string): void {
       guard(event, () => {

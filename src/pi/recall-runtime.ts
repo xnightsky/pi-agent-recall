@@ -67,7 +67,7 @@ class Runtime implements RecallRuntime {
     this.reservationId = undefined;
     if (!id) return { messages: [...messages], delivered: false, ...(this.reason ? { reason: this.reason } : {}) };
     const current = readAnchor(this.options.anchors);
-    const prepared = this.options.core.prepareDelivery(id, { now, fence: this.options.core.getState().fence,
+    const prepared = this.options.core.prepareDelivery(id, { now: this.freshNow(now), fence: this.options.core.getState().fence,
       facts: reanchorFacts, ...(current ? { anchor: current.metadata } : {}) });
     if (prepared.status === "rejected") return { messages: [...messages], delivered: false, reason: prepared.reason };
     const message = { role: "custom", customType: "pi-agent-recall.reanchor.v1",
@@ -89,7 +89,7 @@ class Runtime implements RecallRuntime {
     } });
     if (decision.kind === "silent") return { delivered: false, reason: decision.reason };
     const current = readAnchor(this.options.anchors);
-    const prepared = this.options.core.prepareDelivery(decision.reservation.id, { now,
+    const prepared = this.options.core.prepareDelivery(decision.reservation.id, { now: this.freshNow(now),
       fence: this.options.core.getState().fence, facts: wakeFacts,
       ...(current ? { anchor: current.metadata } : {}) });
     if (prepared.status === "rejected") return { delivered: false, reason: prepared.reason };
@@ -102,10 +102,17 @@ class Runtime implements RecallRuntime {
   transition(event: TransitionEvent): TransitionResult { return this.options.core.transition(event); }
   close(): void { this.options.core.close(); }
 
+  /** 嵌套转换可能已推进实例时钟；core 拒绝时钟倒退，此处钳制到实例已知最新时刻。 */
+  private freshNow(now: number): number {
+    const known = this.options.core.getState().now;
+    return known > now ? known : now;
+  }
+
   private accept(action: ActionKind, permit: DeliveryPermit, now: number): boolean {
     try { this.options.sink?.accept(action); }
-    catch { this.options.core.commitDelivery(permit, "failed", now); return false; }
-    this.options.core.commitDelivery(permit, "submitted", now);
+    catch { this.options.core.commitDelivery(permit, "failed", this.freshNow(now)); return false; }
+    // sink 内可能嵌套推进时钟；钳制发生在 commit 调用点而非 sink 之前。
+    this.options.core.commitDelivery(permit, "submitted", this.freshNow(now));
     return true;
   }
 }

@@ -35,3 +35,28 @@ export interface PiBoundaryResult { entries: PiWakeEntry[]; continue: true }
 
 /** 同步宿主草稿接收边界；失败必须显式抛出。 */
 export interface PiDeliverySink { accept(action: ActionKind): void }
+
+/** 工具执行结果的最小结构；与宿主 AgentToolResult 对齐。 */
+export interface PiToolResult {
+  content: Array<{ type: "text"; text: string }>;
+  isError?: boolean;
+}
+
+/** 注册工具的最小结构；parameters 为 TypeBox 兼容 JSON Schema 字面量。 */
+export interface PiToolDefinition {
+  name: string;
+  label: string;
+  description: string;
+  promptSnippet?: string;
+  parameters: unknown;
+  execute(id: string, params: unknown, signal?: unknown, onUpdate?: unknown, ctx?: unknown): Promise<PiToolResult>;
+}
+
+/** 斜杠命令的宿主上下文；只取通知面。 */
+export interface PiCommandContext { ui: { notify(message: string, type?: "info" | "warning" | "error"): void } }
+
+/** 注册命令的最小结构。 */
+export interface PiCommandDefinition {
+  description?: string;
+  handler(args: string, ctx: PiCommandContext): Promise<void>;
+}

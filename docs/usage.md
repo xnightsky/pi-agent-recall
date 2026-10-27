@@ -296,7 +296,7 @@ pnpm pack --pack-destination .tmp/package
 将生成的 tarball 复制到消费者自己的 vendor 目录，再在消费者目录运行：
 
 ```sh
-pnpm add ./vendor/pi-agent-recall-0.2.0-experimental.0.tgz
+pnpm add ./vendor/pi-agent-recall-0.3.0-experimental.0.tgz
 ```
 
 这不是 registry 发布，也不需要 publish。仅使用 pi-agent-recall/core、pi-agent-recall/testing 与 pi-agent-recall/pi；TypeScript 消费者使用支持 ESM 的模块设置，例如 NodeNext。详细边界见[包边界](package-boundary.md)。

@@ -12,7 +12,7 @@
 - `prepareDelivery` 完整复核，单次许可即计尝试；`commitDelivery` 区分 submitted/failed/unknown，有界幂等，失败不退款、不自动重试。
 - `pi-agent-recall/testing`：显式 fake clock、同步 fake sink、确定性 replay；角色与规则双来源 contract fixture。
 - shadow 从独立零账本模拟，外部始终 silent；切 emit 不补发，真实账本不因配置切换清零。
-- `pi-agent-recall/pi`：Pi 事件组合根与同步投递内核；测试先行，经真实 Pi 1.4.0 零费用 PTY 场景矩阵验证。
+- `pi-agent-recall/pi`：Pi 事件组合根与同步投递内核；测试先行，经真实 Pi 1.4.0 零费用 PTY 场景矩阵验证。会话面：模型侧单一 `recall` 信号工具（acknowledge/refresh），人侧 `/recall` 只读命令。
 - 零 runtime dependencies，ESM JS+d.ts；无网络、timer、全局 owner registry 或 core 正文存储。
 
 ## 开发与验证

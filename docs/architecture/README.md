@@ -43,7 +43,7 @@ core 不依赖 Pi，但独立 core 不能读取内容、监听真实会话或完
 | fake clock/sink、候选级确定性 replay、包消费 | 已实现 |
 | 独立策略定义、生效参数解析、观察到提案的生成和策略归因 | 已确认方向、未实现 |
 | 单一生效策略内的有序规则、两个参考策略、新 Observation 接口 | 待评审提案，未实现 |
-| Pi recall adapter | 已实现并经 `/pi` 公开；模型 Tool、Skill 未实现 |
+| Pi recall adapter | 已实现并经 `/pi` 公开；模型 `recall` 信号工具与 `/recall` 只读命令已实现；Skill 未实现 |
 | 真实模型净收益、跨宿主投递契约 | 未验证 |
 
 阶段零完成只对应其限定契约，不能作为完整策略核心完成的证据。真实 Pi V2 测试已加载 recall 测试 adapter，但受控 fixture 通过不等于生产接入、完整生命周期覆盖或模型收益。
