@@ -42,12 +42,12 @@ wrapper extension 代码（初始 AttentionConfig，人编辑）
 
 ### 3.1 `recall_read`（只读）
 
-无参数。一次返回全量无正文观测面：
+无参数。返回 `{ config, recall }` 两个英文分区键的全量无正文观测面：
 
-| 载荷分区 | 内容 | 来源 |
+| 分区键 | 内容 | 来源 |
 |---|---|---|
-| 配置段 | 生效 mode/profile id 与来源、fence 六元组、real vs shadow 账本、最近抑制原因 | `getState()` |
-| 召回段 | 当前锚点元数据（ref/version/sizeBytes/expiresAt）与最近一次投递结果 | adapter 快照；默认不含正文，正文透出与否由 wrapper 显式配置 |
+| `config` | 生效 mode/profile id 与来源、fence 六元组、real vs shadow 账本、最近抑制原因 | `getState()` |
+| `recall` | 当前锚点元数据（ref/version/sizeBytes/expiresAt）与最近一次投递结果 | adapter 快照；默认不含正文，正文透出与否由 wrapper 显式配置 |
 
 ### 3.2 `recall_write`（写）
 
@@ -55,7 +55,7 @@ wrapper extension 代码（初始 AttentionConfig，人编辑）
 
 | action | 参数 | 写路径与边界 |
 |---|---|---|
-| `"config"` | `mode: "off" \| "shadow"`、有界数值（dedupeMs/cooldownMs/预算/TTL，上下限写死在 schema） | 合并进 override 后 `applyConfig`；**schema 枚举里没有 emit——模型可降噪不可自我解禁**；开 emit 只能人改 wrapper 配置代码（或将来 slash 命令） |
+| `"configure"` | `mode: "off" \| "shadow"`、有界数值（dedupeMs/cooldownMs/预算/TTL，上下限写死在 schema） | 合并进 override 后 `applyConfig`；**schema 枚举里没有 emit——模型可降噪不可自我解禁**；开 emit 只能人改 wrapper 配置代码（或将来 slash 命令） |
 | `"acknowledge"` | 无 | 确认收到当前锚点版本，落带 fence 归因的无正文 trace；**弱证据**：只能由消费者折算进后续候选的 `evidenceCount`；core 的 `adoption:"unobserved"` 不变量不动 |
 | `"refresh"` | 无 | 声明锚点过时，adapter 通知 AnchorProvider 升版本；升版后按正常门槛评估，dedupe/cooldown 不被绕过 |
 
