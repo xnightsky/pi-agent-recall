@@ -19,7 +19,7 @@
 
 ## 开发与验证
 
-纯 core 运行要求 Node >=22；当前开发测试依赖 x-agent-suite，需 Node >=24、pnpm 10.33.0，以及同级 `x-agent-suite/artifacts/0.6.1/` 成对固定制品。安装前核对 SHA256，见[载具计划](docs/plans/2026-10-25-pi-pty-fixture.md)。
+纯 core 运行要求 Node >=22；开发测试需 Node >=24、pnpm 10.33.0。PTY 集成场景另需 x-agent-suite 0.6.1 成对 tarball（**可选依赖**，手动安装见 [testing.md](docs/testing.md)），缺失时相关测试自动 skip；制品 SHA256 见[载具计划](docs/plans/2026-10-25-pi-pty-fixture.md)。
 
 ```sh
 pnpm install
@@ -53,7 +53,7 @@ E2E_PI_PTY=1 pnpm ittest     # macOS + 已安装 Pi 1.4.0；假端点、OS 网�
 - [确定性策略核心补全规格（待评审）](docs/spec/2026-10-25-deterministic-policy-core-design.md)
 - [使用教程：shadow、fake 投递与回放](docs/usage.md)
 - [零 token 可运行示例](docs/examples/core-walkthrough.mjs)
-- [阶段实施计划](docs/plans/2026-10-25-phase-zero.md)
+- [阶段一 adapter 公开记录](docs/plans/2026-10-26-phase-one-adapter.md)
 - [测试、真实宿主和删除实验门禁](docs/testing.md)
 - [行业评分证据与离线标定](docs/research/2026-10-25-attention-scores-and-offline-calibration.md)
 
