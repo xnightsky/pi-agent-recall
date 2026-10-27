@@ -15,7 +15,7 @@ function run(command: string, args: string[], cwd = root): string {
     env: { ...process.env, COREPACK_ENABLE_NETWORK: "0" }, stdio: ["ignore", "pipe", "pipe"] });
 }
 
-test("tarball 离线消费公开接口与教程，私有路径和 /pi 不可导入", () => {
+test("tarball 离线消费公开接口与教程，私有路径不可导入", () => {
   mkdirSync(temporary, { recursive: true });
   const consumer = mkdtempSync(join(temporary, "package-consumer-"));
   try {
@@ -53,12 +53,14 @@ const runtimeConsumer = `
 import assert from "node:assert/strict";
 import { createPolicyCore } from "pi-agent-recall/core";
 import { createFakeClock, createFakeSink, replay } from "pi-agent-recall/testing";
+import { createPiRecallExtension } from "pi-agent-recall/pi";
 const options = { scope: "consumer", owner: "one", incarnation: "runtime-unique" };
 assert.equal(createPolicyCore(options).getState().profile.settings.mode, "off");
 assert.equal(createFakeClock(1).advance(2), 3);
 assert.deepEqual(createFakeSink().getCalls(), []);
 assert.equal(replay(options, []).state.active, true);
-for (const path of ["pi-agent-recall/pi", "pi-agent-recall/dist/core/profile.js", "pi-agent-recall"]) {
+assert.equal(typeof createPiRecallExtension, "function");
+for (const path of ["pi-agent-recall/dist/core/profile.js", "pi-agent-recall"]) {
   await assert.rejects(import(path), { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" });
 }
 console.log("package-contract-ok");
@@ -67,6 +69,12 @@ console.log("package-contract-ok");
 const typedConsumer = `
 import { createPolicyCore, type PolicyCore, type AnchorMetadata } from "pi-agent-recall/core";
 import { replay, type ReplayEvent, type FakeClock, createFakeClock } from "pi-agent-recall/testing";
+import { createPiRecallExtension, type PiRecallTrace, type PiAnchorProvider } from "pi-agent-recall/pi";
+const trace: PiRecallTrace = { event: "check" };
+void trace;
+const anchors: PiAnchorProvider = { current: () => undefined };
+void createPiRecallExtension;
+void anchors;
 const options = { scope: "s", owner: "o", incarnation: "unique" };
 const core: PolicyCore = createPolicyCore(options);
 const anchor: AnchorMetadata = { ref: { provider: "rules", id: "one" }, version: "1", sizeBytes: 10 };
