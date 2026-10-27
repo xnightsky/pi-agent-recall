@@ -8,7 +8,7 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { SandboxContext } from "x-agent-suite/contracts";
+import type { SuiteSandbox as SandboxContext } from "./suite-types.js";
 import { loopbackPort } from "./pi-fixture.js";
 
 const probe = `

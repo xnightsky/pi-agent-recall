@@ -5,7 +5,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { HarnessProfile, SandboxContext, WriteConfigContext } from "x-agent-suite/contracts";
+import type { SuiteSandbox as SandboxContext, SuiteWriteConfigContext as WriteConfigContext } from "./suite-types.js";
 
 /** 校验无认证/路径/query 的显式 IPv4 loopback 端口。 */
 export function loopbackPort(baseUrl: string): number {
@@ -71,15 +71,15 @@ async function writeConfig(sandbox: SandboxContext, context: WriteConfigContext)
     'import { writeFileSync } from "node:fs";\nwriteFileSync(new URL("./pi.pid", import.meta.url), String(process.pid));\n');
 }
 
-/** 创建固定 CLI 入口、假端点与网络封锁的真实 PTY 测试 profile；仅允许显式测试扩展。 */
-export function createPiFixtureProfile(cliEntry: string, extension?: string, keepExtensionTools = false): HarnessProfile {
+/** 创建固定 CLI 入口、假端点与网络封锁的真实 PTY 测试 profile；仅允许显式测试扩展。返回类型靠推断，与套件 HarnessProfile 结构化兼容。 */
+export function createPiFixtureProfile(cliEntry: string, extension?: string, keepExtensionTools = false) {
   return {
     name: "recall-pi-fixture", command: "sandbox-exec", wire: "openai-chat",
     baseUrlEnv: "", stripEnv: Object.keys(process.env), supportsFixture: true,
     sandbox: { configDirs: ["piHome"] },
     configDirEnv: { env: "PI_CODING_AGENT_DIR", sandboxDir: "piHome" },
     headlessArgs: () => { throw new Error("this fixture only supports PTY"); },
-    ptyArgs: ({ cwd }) => [
+    ptyArgs: ({ cwd }: { cwd: string }) => [
       "-f", join(cwd, "network.sb"), process.execPath, "--import", join(cwd, "record-pid.mjs"), cliEntry,
       "--provider", "recall-fixture", "--model", "fake", "--thinking", "off",
       "--offline", "--no-session", "--no-approve", "--no-extensions", "--no-mcp",

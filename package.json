@@ -41,9 +41,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "@x-agent-suite/pty-driver": "file:本地制品目录/x-agent-suite-pty-driver-0.6.1.tgz",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3",
-    "x-agent-suite": "file:本地制品目录/x-agent-suite-0.6.1.tgz"
+    "typescript": "^6.0.3"
   }
 }

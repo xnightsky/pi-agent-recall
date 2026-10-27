@@ -10,8 +10,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { test } from "node:test";
-import type { SandboxContext } from "x-agent-suite/contracts";
-import { FakeProviderBackend } from "x-agent-suite/llm-fixture";
+import { loadSuite, type SuiteModules, type SuiteSandbox as SandboxContext } from "../support/suite-types.js";
 import { createPiFixtureProfile, isolatePiEnvironment } from "../support/pi-fixture.js";
 import { findExecutable, piInstallation } from "../support/pi-host.js";
 import { verifyNetworkIsolation } from "../support/pi-network.js";
@@ -30,8 +29,8 @@ function assertPidExited(pid: number): void {
     (error as NodeJS.ErrnoException).code === "ESRCH", "recorded Pi process must have exited");
 }
 
-async function runFixture(entry: string, sandboxExecutable: string) {
-  const { createPtyAgentDriver } = await import("@x-agent-suite/pty-driver");
+async function runFixture(entry: string, sandboxExecutable: string, suite: SuiteModules) {
+  const { createPtyAgentDriver, FakeProviderBackend } = suite;
   const marker = `RECALL_PTY_${randomUUID().replaceAll("-", "")}`;
   const prompt = "Run the isolated transport check.";
   const backend = new FakeProviderBackend({ wire: "openai-chat", script: [{ text: marker }] });
@@ -108,6 +107,8 @@ test("Pi 1.4.0 PTY：隔离网络中的真实 TUI 完成一次 fixture 请求并
   timeout: 90_000,
 }, async (context) => {
   if (process.platform !== "darwin") return context.skip("requires macOS sandbox-exec network guard");
+  const suite = await loadSuite();
+  if (!suite) return context.skip("x-agent-suite 未安装（可选依赖，见 docs/testing.md）");
   if (Number(process.versions.node.split(".")[0]) < 24) return context.skip("x-agent-suite requires Node >=24");
   const sandboxExecutable = findExecutable("sandbox-exec");
   if (!sandboxExecutable) return context.skip("sandbox-exec not installed");
@@ -115,6 +116,6 @@ test("Pi 1.4.0 PTY：隔离网络中的真实 TUI 完成一次 fixture 请求并
   if (!installation) return context.skip("Pi CLI not installed");
   if (installation.version !== "1.4.0") return context.skip(`unverified Pi version: ${installation.version}`);
   assert.notEqual(process.env.E2E_KEEP_SANDBOX, "1", "retaining sandbox is not supported by this test");
-  const evidence = await runFixture(installation.entry, sandboxExecutable);
+  const evidence = await runFixture(installation.entry, sandboxExecutable, suite);
   context.diagnostic(`Pi ${evidence.version}; x-agent-suite ${evidence.suite}; requests=1; PID exited; directories removed`);
 });

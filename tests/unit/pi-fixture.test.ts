@@ -6,10 +6,10 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { test } from "node:test";
-import type { SandboxContext } from "x-agent-suite/contracts";
+import type { SuiteSandbox as SandboxContext } from "../support/suite-types.js";
+import { loadSuite } from "../support/suite-types.js";
 import { createPiFixtureProfile, isolatePiEnvironment, loopbackPort } from "../support/pi-fixture.js";
 import { integrationTestFiles } from "../support/test-files.js";
-import { FakeProviderBackend } from "x-agent-suite/llm-fixture";
 import { findExecutable } from "../support/pi-host.js";
 import { verifyNetworkIsolation } from "../support/pi-network.js";
 
@@ -100,9 +100,11 @@ test("禁用发现扩展时仍只加载显式 recall fixture", async () => {
 
 test("OS 网络门禁：允许本次端口，其余端口与非 loopback 被拒绝", {
   skip: process.platform !== "darwin" || !findExecutable("sandbox-exec"), timeout: 15_000,
-}, async () => {
+}, async (t) => {
+  const suite = await loadSuite();
+  if (!suite) return t.skip("x-agent-suite 未安装（可选依赖；装回后本测试恢复执行）");
   await withSandbox(async (sandbox) => {
-    const backend = new FakeProviderBackend({ wire: "openai-chat", script: [{ text: "fixture" }] });
+    const backend = new suite.FakeProviderBackend({ wire: "openai-chat", script: [{ text: "fixture" }] });
     try {
       const context = await backend.start();
       await createPiFixtureProfile(process.execPath).writeConfig(sandbox, { ...context, injectServer: false });

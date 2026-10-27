@@ -9,8 +9,7 @@ import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { test } from "node:test";
-import type { SandboxContext } from "x-agent-suite/contracts";
-import { FakeProviderBackend } from "x-agent-suite/llm-fixture";
+import { loadSuite, type SuiteModules, type SuiteSandbox as SandboxContext } from "../support/suite-types.js";
 import { createPiFixtureProfile, isolatePiEnvironment } from "../support/pi-fixture.js";
 import { findExecutable, piInstallation } from "../support/pi-host.js";
 import { verifyNetworkIsolation } from "../support/pi-network.js";
@@ -117,8 +116,8 @@ const scenarios: Scenario[] = [
     } },
 ];
 
-async function runScenario(scenario: Scenario, entry: string, sandboxExecutable: string): Promise<void> {
-  const { createPtyAgentDriver } = await import("@x-agent-suite/pty-driver");
+async function runScenario(scenario: Scenario, entry: string, sandboxExecutable: string, suite: SuiteModules): Promise<void> {
+  const { createPtyAgentDriver, FakeProviderBackend } = suite;
   const marker = `RECALL_${scenario.name}_${randomUUID().replaceAll("-", "")}`;
   const backend = new FakeProviderBackend({ wire: "openai-chat",
     script: scenario.script ?? Array.from({ length: scenario.responses },
@@ -169,11 +168,13 @@ test("Pi 1.4.0 加载 recall 测试 adapter 的 V2 场景", {
   timeout: 180_000,
 }, async context => {
   if (process.platform !== "darwin") return context.skip("requires macOS sandbox-exec network guard");
+  const suite = await loadSuite();
+  if (!suite) return context.skip("x-agent-suite 未安装（可选依赖，见 docs/testing.md）");
   if (Number(process.versions.node.split(".")[0]) < 24) return context.skip("x-agent-suite requires Node >=24");
   const sandboxExecutable = findExecutable("sandbox-exec");
   if (!sandboxExecutable) return context.skip("sandbox-exec not installed");
   const installation = piInstallation();
   if (!installation) return context.skip("Pi CLI not installed");
   if (installation.version !== "1.4.0") return context.skip(`unverified Pi version: ${installation.version}`);
-  for (const scenario of scenarios) await runScenario(scenario, installation.entry, sandboxExecutable);
+  for (const scenario of scenarios) await runScenario(scenario, installation.entry, sandboxExecutable, suite);
 });
