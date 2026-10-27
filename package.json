@@ -2,6 +2,7 @@
   "name": "pi-agent-recall",
   "version": "0.4.0-experimental.0",
   "private": true,
+  "license": "MIT",
   "description": "Deterministic model attention policy: silent, reanchor, and bounded wake decisions",
   "type": "module",
   "engines": {
@@ -37,7 +38,8 @@
     "ittest": "tsx tests/run-integration.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "check": "pnpm test && pnpm typecheck && pnpm build"
+    "check": "pnpm test && pnpm typecheck && pnpm build",
+    "prepack": "pnpm check"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
