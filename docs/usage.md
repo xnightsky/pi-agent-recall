@@ -214,7 +214,7 @@ const result = sink.submit(ready.permit);
 const receipt = core.commitDelivery(ready.permit, result, clock.now());
 ```
 
-fake sink 只记录许可和模拟结果，不会消费正文或注入真实请求。实际宿主组合根必须用同一当前快照，将正文投递到正确位置。`src/pi` 已有测试先行的同步 adapter，但只供显式测试 fixture 加载，不是可安装的生产 `/pi` 入口。
+fake sink 只记录许可和模拟结果，不会消费正文或注入真实请求。实际宿主组合根必须用同一当前快照，将正文投递到正确位置。Pi 宿主可直接使用公开的 `pi-agent-recall/pi` 入口（`createPiRecallExtension`）；生产 AnchorProvider 由消费者实现，模型效果仍未验证。
 
 prepare 成功已保守计一次尝试。同步提交明确拒绝才记 failed；不确定则 unknown。failed/unknown 不退款、不自动重试，commit 不能接受 adopted。
 
@@ -282,7 +282,7 @@ const result = replay(options, events);
 | pending-capacity / dedupe-capacity | 未完成项和有效去重是否占满容量 | 驱逐仍有效项来绕过 |
 | expired / stale-reservation | deadline、expiry、TTL 或配置失效是否发生 | 缓存旧许可、自动补发 |
 | 推进 fake clock 后状态未清理 | 是否有下一次携 now 的 core 调用 | 把 fake clock 当 timer |
-| 根入口、深路径或 /pi 导入失败 | 是否只使用公开 /core、/testing | 绕过 exports 深导入 |
+| 根入口或深路径导入失败 | 是否只使用公开 /core、/testing、/pi | 绕过 exports 深导入 |
 
 ## 13. 本地消费与验证
 
@@ -296,10 +296,10 @@ pnpm pack --pack-destination .tmp/package
 将生成的 tarball 复制到消费者自己的 vendor 目录，再在消费者目录运行：
 
 ```sh
-pnpm add ./vendor/pi-agent-recall-0.1.0-experimental.0.tgz
+pnpm add ./vendor/pi-agent-recall-0.2.0-experimental.0.tgz
 ```
 
-这不是 registry 发布，也不需要 publish。仅使用 pi-agent-recall/core 与 pi-agent-recall/testing；TypeScript 消费者使用支持 ESM 的模块设置，例如 NodeNext。详细边界见[包边界](package-boundary.md)。
+这不是 registry 发布，也不需要 publish。仅使用 pi-agent-recall/core、pi-agent-recall/testing 与 pi-agent-recall/pi；TypeScript 消费者使用支持 ESM 的模块设置，例如 NodeNext。详细边界见[包边界](package-boundary.md)。
 
 在本仓验证：
 

@@ -41,13 +41,13 @@
 
 - 本库是模型注意力策略，不是 cron、业务 scheduler、记忆库或消息设施。
 - `core` 无宿主依赖、无 I/O；只接收确定性事实与无正文锚点元数据。
-- 消费者拥有 AnchorProvider；宿主组合根拥有唯一 session emit owner。本阶段只交付 core/testing，adapter 与生产迁移另行评审。
+- 消费者拥有 AnchorProvider；宿主组合根拥有唯一 session emit owner。core/testing 与 `/pi` adapter 已交付；生产 AnchorProvider、双消费者迁移与模型效果验证另行评审。
 - 只在本仓写入；相邻仓只读。无额外授权不发布、提交或远程写入。
 - 调整公共契约时读取 `docs/architecture/core.md`；调整测试与实验时读取 `docs/testing.md`。
 
 ## 结构与命名
 
-- 单包，`src/core/` 与 `src/testing/`；导出入口 `/core`、`/testing`，不提前提供 `/pi` 空实现。
+- 单包，`src/core/`、`src/testing/` 与 `src/pi/`；导出入口 `/core`、`/testing`、`/pi`，不提前提供未实现入口。
 - 文件和目录用 kebab-case；类型 PascalCase，函数/变量 camelCase。
 - `tests/unit/*.test.ts` 与 `tests/support/`。未来真实宿主测试使用 `tests/integration/**/*.ittest.ts`；付费模型实验只能显式运行 `*.token.ittest.ts`。
-- 文档分层与 frontmatter 见 `docs/README.md`；本仓无宿主 extension/skill，不复制下游技能。
+- 文档分层与 frontmatter 见 `docs/README.md`；本仓不含 skill，不复制下游技能；`/pi` extension 仅经 `pi-agent-recall/pi` 出口分发。
